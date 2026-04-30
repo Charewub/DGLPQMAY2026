@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirAsia Academy - Digital Answer Sheet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --aa-red: #e32636;
+            --aa-dark: #333;
+            --aa-light: #f8f9fa;
+            --aa-success: #28a745;
+            --aa-warning: #ffc107;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-wrapper {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        /* Header Section */
+        header {
+            background: #ffffff; 
+            color: var(--aa-dark);
+            padding: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 4px solid var(--aa-red); 
+        }
+        header img { 
+            width: 140px; 
+            display: block; 
+            margin: 0 auto 8px; 
+        }
+        header h1 { 
+            margin: 0; 
+            font-size: 16px; 
+            font-family: 'Poppins', sans-serif; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            color: var(--aa-dark);
+        }
+
+        /* Screens Management */
+        .screen { padding: 25px; display: none; flex-direction: column; flex-grow: 1; }
+        .screen.active { display: flex; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--aa-dark); font-size: 14px; }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        input:focus { border-color: var(--aa-red); outline: none; }
+
+        .btn {
+            background: var(--aa-red);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        /* Exam Interface */
+        .set-header {
+            background: var(--aa-dark);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            margin: 25px 0 15px;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .q-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .q-idx { width: 40px; font-weight: bold; color: var(--aa-red); font-size: 18px; }
+        .options-wrap { display: flex; flex-grow: 1; justify-content: space-around; }
+        .bubble {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            background: #fff;
+            transition: 0.2s;
+        }
+        .bubble.selected {
+            background: var(--aa-red);
+            color: white;
+            border-color: var(--aa-red);
+        }
+
+        /* Result View */
+        .res-card {
+            text-align: center;
+            border: 2px solid #eee;
+            padding: 30px 20px;
+            border-radius: 20px;
+            background: #fff;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border: 6px solid var(--aa-red);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 10px 35px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+
+        /* Save Status UI */
+        .save-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .pending { background: #fff3cd; color: #856404; }
+        .success { background: #d1ecf1; color: #0c5460; }
+        
+        /* ปรับแต่ง Font ให้ SweetAlert เข้ากับเว็บ */
+        div:where(.swal2-container) {
+            font-family: 'Sarabun', sans-serif !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+    <header>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/AirAsia_New_Logo.svg/960px-AirAsia_New_Logo.svg.png" alt="AirAsia Logo">
+        <h1>Academy Exam Portal</h1>
+    </header>
+
+    <div id="loginScreen" class="screen active">
+        <h2 style="text-align:center; font-family:'Poppins';">เข้าสู่ระบบการสอบ<br><span style="font-size:16px;">(ເຂົ້າສູ່ລະບົບການສອບ)</span></h2>
+        
+        <div class="form-group">
+            <label>รหัสพนักงาน (ລະຫັດພະນັກງານ)</label>
+            <input type="text" id="tID" placeholder="ตัวอย่าง: QV0436">
+        </div>
+        
+        <div class="form-group">
+            <label>ชื่อ-นามสกุล (ຊື່ ແລະ ນາມສະກຸນ)</label>
+            <input type="text" id="tName" placeholder="Full Name (EN)">
+        </div>
+        
+        <div class="form-group">
+            <label>วิชาที่สอบ (ວິຊາທີ່ສອບ)</label>
+            <select id="tCourse">
+                <option value="GS">DG Initial for GS/CBTO</option>
+                <option value="RAMP">DG Initial for Ramp Handling Staff</option>
+            </select>
+        </div>
+        
+        <button class="btn" onclick="startApp()">เริ่มทำข้อสอบ (ເລີ່ມເຮັດບົດສອບ) <i class="fa-solid fa-play-circle"></i></button>
+    </div>
+
+    <div id="examScreen" class="screen">
+        <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:15px; font-weight:bold; background:#f8f9fa; padding:10px; border-radius:5px;">
+            <span id="labelID">ID: -</span>
+            <span id="labelCourse">Course: -</span>
+        </div>
+        <div id="examContainer" style="overflow-y: auto; flex-grow: 1; padding-right: 5px;"></div>
+        <button class="btn" onclick="confirmSubmit()" style="margin-top:20px;">ส่งคำตอบ (ສົ່ງຄຳຕອບ) <i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+
+    <div id="resultScreen" class="screen">
+        <div class="res-card">
+            <h2 id="finalName" style="margin-bottom:5px;">-</h2>
+            <div class="score-circle">
+                <span style="font-size:36px; font-weight:bold;" id="totalVal">0</span>
+                <span style="font-size:11px;">คะแนนรวม<br>(ຄະແນນລວມ)</span>
+            </div>
+            
+            <div id="statusBadge" class="badge pass">ผ่าน (ຜ່ານ)</div>
+
+            <div id="saveIndicator" class="save-status pending">
+                <i class="fa-solid fa-spinner fa-spin"></i> 
+                <span>กำลังบันทึกข้อมูล... (ກຳລັງບັນທຶກຂໍ້ມູນ...)</span>
+            </div>
+            
+            <div style="display:flex; justify-content:space-around; margin-top:15px; border-top:1px solid #eee; padding-top:20px;">
+                <div><small>SET 1 (40)</small><br><strong style="font-size:20px;" id="s1Val">0</strong></div>
+                <div><small>SET 2 (60)</small><br><strong style="font-size:20px;" id="s2Val">0</strong></div>
+            </div>
+        </div>
+        
+        <button class="btn" style="background:#333; margin-top:25px;" onclick="location.reload()">ทำวิชาใหม่ (ເຮັດວິຊາໃໝ່) <i class="fa-solid fa-rotate-left"></i></button>
+    </div>
+</div>
+
+<script>
+    // ฐานข้อมูลเฉลยและค่าน้ำหนัก
+    const KEYS_DB = {
+        "GS": [{ans:[0],p:1},{ans:[1],p:1},{ans:[2],p:1},{ans:[4],p:1},{ans:[3],p:1},{ans:[0],p:1},{ans:[0,4],p:5},{ans:[3],p:3},{ans:[0,1,2,3,4],p:5},{ans:[4],p:1},{ans:[4],p:2},{ans:[4],p:1},{ans:[1],p:1},{ans:[2],p:1},{ans:[3],p:2},{ans:[0],p:1},{ans:[1],p:1},{ans:[1],p:1},{ans:[2,4],p:5},{ans:[0,1,2,4],p:5},{ans:[1],p:2},{ans:[4],p:2},{ans:[2],p:2},{ans:[3],p:2},{ans:[1],p:2},{ans:[0,3,4],p:5},{ans:[2],p:2},{ans:[0,2,4],p:5},{ans:[0,1,2,3,4],p:5},{ans:[1],p:2},{ans:[4],p:2},{ans:[0],p:2},{ans:[1,2,3,4],p:5},{ans:[2,4],p:3},{ans:[1,2,3],p:5},{ans:[2],p:2},{ans:[0,4],p:3},{ans:[4],p:2},{ans:[0,2,4],p:5},{ans:[0],p:2}],
+        "RAMP": [{ans:[0],p:1},{ans:[1],p:1},{ans:[2],p:1},{ans:[4],p:1},{ans:[3],p:1},{ans:[0],p:1},{ans:[0,4],p:5},{ans:[3],p:3},{ans:[0,1,2,3,4],p:5},{ans:[4],p:1},{ans:[4],p:3},{ans:[4],p:1},{ans:[1],p:1},{ans:[2],p:1},{ans:[4],p:1},{ans:[0],p:1},{ans:[1],p:1},{ans:[1],p:1},{ans:[2,4],p:5},{ans:[0,2,4],p:5},{ans:[3],p:2},{ans:[0,1,2,3,4],p:5},{ans:[3],p:2},{ans:[0,1,2,3,4],p:5},{ans:[2],p:2},{ans:[4],p:2},{ans:[0,1,2,3,4],p:5},{ans:[4],p:2},{ans:[4],p:2},{ans:[0,1,2,3,4],p:5},{ans:[2],p:2},{ans:[1],p:2},{ans:[2],p:2},{ans:[4],p:2},{ans:[2],p:2},{ans:[0,1,3,4],p:4},{ans:[1],p:2},{ans:[1],p:2},{ans:[1,2,4],p:5},{ans:[0,1,2,3,4],p:5}]
+    };
+
+    let selections = Array(40).fill(null).map(() => []);
+    let currentCourse = "GS";
+
+    function startApp() {
+        const id = document.getElementById('tID').value;
+        const name = document.getElementById('tName').value;
+        
+        if(!id || !name) {
+            // แทนที่ alert() ด้วย SweetAlert2
+            Swal.fire({
+                icon: 'warning',
+                title: 'ข้อมูลไม่ครบถ้วน',
+                text: 'กรุณากรอกข้อมูลให้ครบ (ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບ)',
+                confirmButtonColor: '#e32636',
+                confirmButtonText: 'ตกลง'
+            });
+            return;
+        }
+
+        currentCourse = document.getElementById('tCourse').value;
+        document.getElementById('labelID').innerText = "รหัส: " + id;
+        document.getElementById('labelCourse').innerText = "วิชา: " + (currentCourse=="GS"?"GS/CBTO":"RAMP");
+
+        renderSheet();
+        showScreen('examScreen');
+    }
+
+    function renderSheet() {
+        const wrap = document.getElementById('examContainer');
+        wrap.innerHTML = '<div class="set-header">ส่วนที่ 1 (ສ່ວນທີ 1) : ข้อ 1 - 20</div>';
+        for(let i=0; i<40; i++) {
+            if(i == 20) wrap.innerHTML += '<div class="set-header">ส่วนที่ 2 (ສ່ວນທີ 2) : ข้อ 21 - 40</div>';
+            wrap.innerHTML += `
+                <div class="q-item">
+                    <div class="q-idx">${i+1}.</div>
+                    <div class="options-wrap">
+                        ${['A','B','C','D','E'].map((l, idx) => `<div class="bubble" id="q${i}o${idx}" onclick="select(${i},${idx})">${l}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    function select(q, o) {
+        const btn = document.getElementById(`q${q}o${o}`);
+        if(selections[q].includes(o)) {
+            selections[q] = selections[q].filter(v => v !== o);
+            btn.classList.remove('selected');
+        } else {
+            selections[q].push(o);
+            btn.classList.add('selected');
+        }
+    }
+
+    function confirmSubmit() {
+        // แทนที่ confirm() ด้วย SweetAlert2
+        Swal.fire({
+            title: 'ยืนยันการส่งคำตอบ?',
+            text: "(ຢືນຢັນການສົ່ງຄຳຕອບ?)",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#e32636',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'ส่งคำตอบ (ສົ່ງ)',
+            cancelButtonText: 'ยกเลิก (ຍົກເລີກ)'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                calculateResult();
+            }
+        });
+    }
+
+    function calculateResult() {
+        let s1 = 0, s2 = 0;
+        const logAns = [];
+        const keys = KEYS_DB[currentCourse];
+
+        keys.forEach((k, i) => {
+            const user = selections[i].sort((a,b) => a-b);
+            const correct = k.ans.sort((a,b) => a-b);
+            logAns.push(user.map(idx => ['A','B','C','D','E'][idx]).join(",") || "-");
+
+            if(user.length === correct.length && user.every((v,idx) => v === correct[idx])) {
+                if(i < 20) s1 += k.p; else s2 += k.p;
+            }
+        });
+
+        const total = s1 + s2;
+        const pass = (s1 >= 32 && s2 >= 48);
+
+        document.getElementById('finalName').innerText = document.getElementById('tName').value;
+        document.getElementById('totalVal').innerText = total;
+        document.getElementById('s1Val').innerText = s1;
+        document.getElementById('s2Val').innerText = s2;
+        
+        const badge = document.getElementById('statusBadge');
+        badge.innerText = pass ? "ผ่าน (ຜ່ານ)" : "ไม่ผ่าน (ບໍ່ຜ່ານ)";
+        badge.className = "badge " + (pass?"pass":"fail");
+
+        showScreen('resultScreen');
+        saveToSheet(s1, s2, total, pass, logAns);
+    }
+
+    function saveToSheet(s1, s2, total, pass, all) {
+        // *** สำคัญ: นำ Web App URL ของ Google Apps Script ของคุณมาใส่ตรงนี้ ***
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz4Po3iQ4y0p7L1jLAxI2MzbRImyMiI2HeniKSph7sMTQZHYPeoCXD9NnpPE5_A7jFCMg/exec";
+        
+        const indicator = document.getElementById('saveIndicator');
+
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                timestamp: new Date().toLocaleString('en-GB'),
+                traineeId: document.getElementById('tID').value,
+                traineeName: document.getElementById('tName').value,
+                course: currentCourse,
+                s1, s2, total, status: pass?"PASS":"FAIL",
+                allAnswers: all
+            })
+        }).then(() => {
+            indicator.className = "save-status success";
+            indicator.innerHTML = '<i class="fa-solid fa-check-circle"></i> <span>บันทึกสำเร็จ! (ບັກທຶກສຳເລັດ!)</span>';
+        }).catch(() => {
+            indicator.className = "save-status pending";
+            indicator.style.background = "#f8d7da";
+            indicator.style.color = "#721c24";
+            indicator.innerHTML = '<span>❌ บันทึกไม่สำเร็จ กรุณาแจ้งผู้ดูแล</span>';
+            
+            // แจ้งเตือนข้อผิดพลาดผ่าน SweetAlert2 เสริม
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                confirmButtonColor: '#e32636'
+            });
+        });
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0,0);
+    }
+</script>
+</body>
+</html>
